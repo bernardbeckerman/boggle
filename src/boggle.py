@@ -8,6 +8,7 @@
 import numpy as np
 import random
 from collections import defaultdict
+from datetime import datetime
 
 #trie node data structure
 #replace with namedtuple
@@ -37,13 +38,24 @@ def make_trie(mydict='sowpods'):
     return trie_head
 
 #check if word is in trie
-def check_word(word):
+def check_word(word, trie_head):
     curr_node = trie_head
     for ichar in word:
         if ichar not in curr_node['children']:
             return False
         curr_node = curr_node['children'][ichar]
     return curr_node['is_word']
+
+def sum_word_scores(words, scoring="standard"):
+    words = set(words)
+    if scoring is not 'standard':
+        raise ValueError('Not currently programmed for non-standard scoring.')
+    scoring_dict = {0:0,1:0,2:0,3:1,4:1,5:2,6:3,7:5}
+    scoring_dict = defaultdict(lambda:11, scoring_dict)
+    score = 0
+    for word in words:
+        score += scoring_dict[len(word)]
+    return score
 
 #class managing dice
 class Die:
@@ -80,11 +92,9 @@ class Board:
         self.grid = np.reshape(self.grid,[self.n,self.m])
 
     #recursive fn that checks if pattern 'word' is a word
-    def find_words_from(self, i, j, curr_node, word = None, visited = None):
-        if visited is None:
-            visited = np.zeros([self.n, self.m])
-        if word is None:
-            word = []
+    def find_words_from(self, i, j, curr_node, word, visited):
+        #import pdb
+        #pdb.set_trace()
         visited[i][j] = 1
         word.append(self.grid[i][j])
         child_node = curr_node['children'][self.grid[i][j]]
@@ -101,26 +111,46 @@ class Board:
                 if ineigh == i and jneigh == j:
                     continue
                 ichar = self.grid[ineigh][jneigh]
-                if (visited[ineigh][jneigh] == 0) and (ichar in child_node['children']):
-                    self.find_words_from(ineigh, jneigh, child_node, word = word, visited = np.copy(visited))
+                if (visited[ineigh][jneigh] == 0) and (ichar in child_node['children'].keys()):
+                    self.find_words_from(ineigh, jneigh, child_node.copy(), word = word.copy(), visited = np.copy(visited))
                     
     #finds all words in current board arrangement using recursive fn above
     def find_words(self):
         self.words = []
         for i in range(self.n):
             for j in range(self.m):
-                self.find_words_from(i, j, self.trie_head)
-        return sorted(self.words)
+                self.find_words_from(i, j, self.trie_head, [], np.zeros([self.n, self.m]))
+        self.words = sorted(set(self.words))
+        return self.words
 
-    def score(self, scoring="standard"):
-        if scoring is not 'standard':
-            raise ValueError('Not currently programmed for non-standard scoring.')
-        scoring_dict = {0:0,1:0,2:0,3:1,4:1,5:2,6:3,7:5}
-        scoring_dict = defaultdict(lambda:11, scoring_dict)
-        score = 0
-        for word in self.words:
-            score += scoring_dict[len(word)]
-        return score
+    def play_game(self):
+        self.shake()
+        user_words = []
+        print(self.grid)
+        start_time = datetime.now()
+        while True:
+            word = input("Enter word:")
+            if (datetime.now() - start_time).seconds > 30:
+                break
+            user_words.append(word)
+        print("game over! scoring...")
+        user_words = set(user_words)
+        valid_words = [word for word in user_words if check_word(word, self.trie_head) == True]
+        invalid_words = [word for word in user_words if check_word(word, self.trie_head) == False]
+        valid_words.sort()
+        invalid_words.sort()
+        all_words = sorted(set(self.find_words()))
+        
+        print()
+        print("your valid words: " + ", ".join(valid_words))
+        print()
+        print("your invalid words: " + ", ".join(invalid_words))
+        print()
+        print("your score: " + str(sum_word_scores(set(valid_words))))
+        print()
+        print("all valid words: " + ", ".join(all_words))
+        print()
+        print("total possible points: " + str(sum_word_scores(all_words)))
 
 def main(ngames):
     board = Board()
@@ -130,6 +160,6 @@ def main(ngames):
         board.shake()
         for word in board.find_words():
             counts[word] += 1
-        scores.append(board.score())
+        scores.append(sum_word_scores(board.words))
     return scores, counts
 if __name__ == '__main__': main()
