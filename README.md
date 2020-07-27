@@ -5,14 +5,7 @@ This repo contains functions to:
 * provide the score of those words
 
 TODO:
-* allow gameplay
-* compare to:
-    * solutions of "common words" dictionaries
-    * scrabble champs (statistically or sthg)
-    * friends (competitive gameplay)
-    * wikipedia top 1000 pages?
-* bring `check_word` into board
-* boggle slackbot
+* retrieve dictionaries from internet
 * writeup:
     * Tries:
         * when did i encounter
@@ -26,6 +19,14 @@ TODO:
             * pace
             * surprise from small system
         * english application of tries - how much condensed
-        
 * find best words for user to learn
-* retrieve dictionaries from internet
+* gameplay:
+    * timer
+    * immediate end
+    * actual interface
+* compare to:
+    * solutions of "common words" dictionaries
+    * scrabble champs (statistically or sthg)
+    * friends (competitive gameplay)
+    * wikipedia top 1000 pages?
+* boggle slackbot

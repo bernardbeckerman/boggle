@@ -2,18 +2,24 @@
 #compare to https://www.toptal.com/java/the-trie-a-neglected-data-structure
 
 import numpy as np
+import pandas as pd
 import random
 from collections import defaultdict
 from datetime import datetime
+
+data_dir = 'https://raw.githubusercontent.com/bernardbeckerman/boggle/master/data/'
 
 #make trie of all English words
 def make_trie(mydict='sowpods'):
     trie_head = {'children':{}, 'is_word':False}
     if mydict is not 'sowpods':
         raise ValueError('Not programmed for dictionary ' + mydict + '.')
-    mydict = open('../data/' + mydict + '.txt')
-    for nline,line in enumerate(mydict.readlines()):
-        if nline < 6:
+    mydict = pd.read_csv(data_dir + mydict + '.txt'
+                         , keep_default_na=False
+                         , na_values=['']
+                         , header = None)
+    for nline,line in mydict.iloc[:, 0].items():
+        if (' ' in line) or (len(line) == 0):
             continue
         word = line.strip()
         curr_node = trie_head
@@ -71,7 +77,7 @@ class Board:
         if dice is not 'standard':
             raise ValueError('Not currently programmed for nonstandard dice.')
         self.trie_head = make_trie()
-        self.dice = [Die([ichar for ichar in die.strip()]) for die in open('../data/' + dice + '_dice.txt', 'r')]
+        self.dice = [Die([ichar for ichar in die.strip()]) for num,die in pd.read_csv(data_dir + dice + '_dice.txt', header = None).iloc[:, 0].items()]
         self.n = n
         self.m = m
         if len(self.dice) != n*m:
